@@ -143,10 +143,10 @@ extern "C" {
 
     typedef struct 
     {
-      int16_t pre_range_vcsel_period_pclks, final_range_vcsel_period_pclks;
+      uint16_t pre_range_vcsel_period_pclks, final_range_vcsel_period_pclks;
 
-      int16_t msrc_dss_tcc_mclks, pre_range_mclks, final_range_mclks;
-      int32_t msrc_dss_tcc_us,    pre_range_us,    final_range_us;
+      uint16_t msrc_dss_tcc_mclks, pre_range_mclks, final_range_mclks;
+      uint32_t msrc_dss_tcc_us,    pre_range_us,    final_range_us;
     } SequenceStepTimeouts;
 
     void getSequenceStepEnables(SequenceStepEnables * enables);
@@ -155,13 +155,13 @@ extern "C" {
     
     enum vcselPeriodType { VcselPeriodPreRange, VcselPeriodFinalRange };
 
-    int8_t address;
-    int16_t io_timeout;
+    uint8_t address;
+    uint16_t io_timeout;
     bool did_timeout;
-    int16_t timeout_start_ms;
+    uint16_t timeout_start_ms;
 
-    int8_t stop_variable; // read by init and used when starting measurement; is StopVariable field of VL53L0X_DevData_t structure in API
-    int32_t measurement_timing_budget_us;
+    uint8_t stop_variable; // read by init and used when starting measurement; is StopVariable field of VL53L0X_DevData_t structure in API
+    uint32_t measurement_timing_budget_us;
 
     bool getSpadInfo(int8_t * count, bool * type_is_aperture);
 
@@ -169,48 +169,48 @@ extern "C" {
 
     //VL53L0X(void);
 
-    void setAddress(int8_t new_addr);
-    int8_t getAddress(void);
+    void setAddress(uint8_t new_addr);
+    uint8_t getAddress(void);
 
     bool init(bool io_2v8);
     bool init2();
 
-    void writeReg(int8_t reg, int8_t value);
-    void writeReg16Bit(int8_t reg, int16_t value);
-    void writeReg32Bit(int8_t reg, int32_t value);
-    int8_t readReg(int8_t reg);
-    int16_t readReg16Bit(int8_t reg);
-    int32_t readReg32Bit(int8_t reg);
+    void writeReg(uint8_t reg, uint8_t value);
+    void writeReg16Bit(uint8_t reg, uint16_t value);
+    void writeReg32Bit(uint8_t reg, uint32_t value);
+    uint8_t readReg(uint8_t reg);
+    uint16_t readReg16Bit(uint8_t reg);
+    uint32_t readReg32Bit(uint8_t reg);
 
-    void writeMulti(int8_t reg, int8_t  * src, int8_t count);
-    void readMulti(int8_t reg, int8_t * dst, int8_t count);
+    void writeMulti(uint8_t reg, int8_t  * src, uint8_t count);
+    void readMulti(uint8_t reg, int8_t * dst, uint8_t count);
 
     bool setSignalRateLimit(float limit_Mcps);
     float getSignalRateLimit(void);
 
-    bool setMeasurementTimingBudget(int32_t budget_us);
-    int32_t getMeasurementTimingBudget(void);
+    bool setMeasurementTimingBudget(uint32_t budget_us);
+    uint32_t getMeasurementTimingBudget(void);
 
     bool setVcselPulsePeriod(enum vcselPeriodType type, int8_t period_pclks);
-    int8_t getVcselPulsePeriod(enum vcselPeriodType type);
+    uint8_t getVcselPulsePeriod(enum vcselPeriodType type);
 
-    void startContinuous(int32_t period_ms);
+    void startContinuous(uint32_t period_ms);
     void stopContinuous(void);
-    int16_t readRangeContinuousMillimeters(void);
-    int16_t readRangeSingleMillimeters(void);
+    uint16_t readRangeContinuousMillimeters(void);
+    uint16_t readRangeSingleMillimeters(void);
 
-    void setTimeout(int16_t timeout);
-    int16_t getTimeout(void);
+    void setTimeout(uint16_t timeout);
+    uint16_t getTimeout(void);
     bool timeoutOccurred(void);
 
 
 
     bool performSingleRefCalibration(int8_t vhv_init_byte);
 
-    int16_t decodeTimeout(int16_t value);
-    int16_t encodeTimeout(int16_t timeout_mclks);
-    int32_t timeoutMclksToMicroseconds(int16_t timeout_period_mclks, int8_t vcsel_period_pclks);
-    int32_t timeoutMicrosecondsToMclks(int32_t timeout_period_us, int8_t vcsel_period_pclks);
+    uint16_t decodeTimeout(uint16_t value);
+    uint16_t encodeTimeout(uint16_t timeout_mclks);
+    uint32_t timeoutMclksToMicroseconds(uint16_t timeout_period_mclks, uint8_t vcsel_period_pclks);
+    uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t vcsel_period_pclks);
     int millis();
 
 
