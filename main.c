@@ -46,6 +46,7 @@
 
 
 uint16_t millisecond_count=0;
+char buffer[50]="This is a test";
 
 /*
                          Main application
@@ -70,8 +71,19 @@ void main(void)
 
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
+    
+    RANGE1_EN_SetLow();
+    RANGE2_EN_SetLow();
+    sprintf(buffer,"VL53L0X Driver Test\r\n");
+    printf("%s", buffer);
+    
+    sprintf(buffer,"Calling VL53L0X Init Function\r\n");
+    printf("%s", buffer);
+    RANGE1_EN_SetHigh();
     init(1);
 
+    sprintf(buffer,"Driver VL53L0X Initialized\r\n");
+    printf("%s", buffer);
     while (1)
     {
         // Add your application code
