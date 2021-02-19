@@ -34,7 +34,7 @@
 //#define startTimeout() (timeout_start_ms = 0)
 
 // Check if timeout is enabled (set to nonzero value) and has expired
-#define checkTimeoutExpired() (io_timeout > 0 && ((int16_t)millis() - timeout_start_ms) > io_timeout)
+#define checkTimeoutExpired() (io_timeout > 0 && (millis() - timeout_start_ms) > io_timeout)
 
 // Decode VCSEL (vertical cavity surface emitting laser) pulse period in PCLKs
 // from register value
@@ -48,8 +48,15 @@
 // Calculate macro period in *nanoseconds* from VCSEL period in PCLKs
 // based on VL53L0X_calc_macro_period_ps()
 // PLL_period_ps = 1655; macro_period_vclks = 2304
-#define calcMacroPeriod(vcsel_period_pclks) ((((int32_t)2304 * (vcsel_period_pclks) * 1655) + 500) / 1000)
+#define calcMacroPeriod(vcsel_period_pclks) ((((uint32_t)2304 * (vcsel_period_pclks) * 1655) + 500) / 1000)
 
+extern uint16_t millisecond_count;
+
+union
+{
+    uint32_t      uNumber;  // exactly 4 bytes, no larger
+    unsigned char uByte[4];
+} myUnion;
 // Constructors ////////////////////////////////////////////////////////////////
 
 // VL53L0X(void)
@@ -130,9 +137,9 @@ bool init(bool io_2v8)
 
   // VL53L0X_StaticInit() begin
 
-  int8_t spad_count;
+  uint8_t spad_count;
   //bool spad_type_is_aperture;    // bool can't be used as a pointer
-  int8_t spad_type_is_aperture;
+  uint8_t spad_type_is_aperture;
   
   
   
@@ -141,7 +148,7 @@ bool init(bool io_2v8)
   // The SPAD map (RefGoodSpadMap) is read by VL53L0X_get_info_from_device() in
   // the API, but the same data seems to be more easily readable from
   // GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through _6, so read it from there
-  int8_t ref_spad_map[6];
+  uint8_t ref_spad_map[6];
   readMulti(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
 
   // -- VL53L0X_set_reference_spads() begin (assume NVM values are valid)
@@ -152,10 +159,10 @@ bool init(bool io_2v8)
   writeReg(0xFF, 0x00);
   writeReg(GLOBAL_CONFIG_REF_EN_START_SELECT, 0xB4);
 
-  int8_t first_spad_to_enable = spad_type_is_aperture ? 12 : 0; // 12 is the first aperture spad
-  int8_t spads_enabled = 0;
+  uint8_t first_spad_to_enable = spad_type_is_aperture ? 12 : 0; // 12 is the first aperture spad
+  uint8_t spads_enabled = 0;
 
-  for (int8_t i = 0; i < 48; i++)
+  for (uint8_t i = 0; i < 48; i++)
   {
     if (i < first_spad_to_enable || spads_enabled == spad_count)
     {
@@ -169,7 +176,13 @@ bool init(bool io_2v8)
     }
   }
 
-  writeMulti(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
+  writeReg(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map[0]);
+  writeReg(GLOBAL_CONFIG_SPAD_ENABLES_REF_1, ref_spad_map[1]);
+  writeReg(GLOBAL_CONFIG_SPAD_ENABLES_REF_2, ref_spad_map[2]);
+  writeReg(GLOBAL_CONFIG_SPAD_ENABLES_REF_3, ref_spad_map[3]);
+  writeReg(GLOBAL_CONFIG_SPAD_ENABLES_REF_4, ref_spad_map[4]);
+  writeReg(GLOBAL_CONFIG_SPAD_ENABLES_REF_5, ref_spad_map[5]);
+
 
   // -- VL53L0X_set_reference_spads() end
 
@@ -276,7 +289,8 @@ bool init(bool io_2v8)
 }
 
 
-bool init2() {
+bool init2(void)
+{
   // -- VL53L0X_load_tuning_settings() end
 
   // "Set interrupt config to new sample ready"
@@ -366,23 +380,22 @@ uint16_t readReg16Bit(uint8_t reg)
 uint32_t readReg32Bit(uint8_t reg)
 {
     uint8_t paramBuff[4];
-    uint32_t tmp;
+    uint32_t result;
     i2c_readDataBlock(address, reg, paramBuff, 4);
-    tmp = (uint32_t)(paramBuff[0]<<24 | paramBuff[1]<<16 | paramBuff[2]<<8 | paramBuff[3]);
-    return tmp;
+    
+    myUnion.uByte[0] = paramBuff[3];
+    myUnion.uByte[1] = paramBuff[2];
+    myUnion.uByte[2] = paramBuff[1];
+    myUnion.uByte[3] = paramBuff[0];
+        
+    result = myUnion.uNumber;
+    return result;
 }
 
-// Write an arbitrary number of bytes from the given array to the sensor,
-// starting at the given register
-void writeMulti(uint8_t reg, int8_t * src, uint8_t count)
-{
-   // i2c_write1ByteRegister(address, reg, uint8_t data)
-
-}
 
 // Read an arbitrary number of bytes from the sensor, starting at the given
 // register, into the given array
-void readMulti(uint8_t reg, int8_t * dst, uint8_t count)
+void readMulti(uint8_t reg, uint8_t * dst, uint8_t count)
 {
     i2c_readDataBlock(address, reg, dst, count);
 }
@@ -872,7 +885,7 @@ bool timeoutOccurred()
 // Get reference SPAD (single photon avalanche diode) count and type
 // based on VL53L0X_get_info_from_device(),
 // but only gets reference SPAD count and type
-bool getSpadInfo(int8_t * count, bool * type_is_aperture)
+bool getSpadInfo(uint8_t * count, uint8_t * type_is_aperture)
 {
   uint8_t tmp;
 
@@ -967,8 +980,8 @@ uint16_t decodeTimeout(uint16_t reg_val)
 {
     uint16_t tmp = reg_val;
     // format: "(LSByte * 2^MSByte) + 1"
-    return (int16_t)((tmp & 0x00FF) <<
-         (int16_t)((tmp & 0xFF00) >> 8)) + 1;
+    return (uint16_t)((tmp & 0x00FF) <<
+         (uint16_t)((tmp & 0xFF00) >> 8)) + 1;
 }
 
 // Encode sequence step timeout register value from timeout in MCLKs
@@ -1010,7 +1023,7 @@ uint32_t timeoutMclksToMicroseconds(uint16_t timeout_period_mclks, uint8_t vcsel
 // based on VL53L0X_calc_timeout_mclks()
 uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t vcsel_period_pclks)
 {
-  int32_t macro_period_ns = calcMacroPeriod(vcsel_period_pclks);
+  uint32_t macro_period_ns = calcMacroPeriod(vcsel_period_pclks);
 
   return (((timeout_period_us * 1000) + (macro_period_ns / 2)) / macro_period_ns);
 }
@@ -1019,7 +1032,7 @@ uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t vcsel_pe
 // based on VL53L0X_perform_single_ref_calibration()
 bool performSingleRefCalibration(int8_t vhv_init_byte)
 {
-  writeReg(SYSRANGE_START, (uint8_t)0x01 | vhv_init_byte); // VL53L0X_REG_SYSRANGE_MODE_START_STOP
+  writeReg(SYSRANGE_START, (uint8_t)(0x01 | vhv_init_byte)); // VL53L0X_REG_SYSRANGE_MODE_START_STOP
 
   startTimeout();
   while ((readReg(RESULT_INTERRUPT_STATUS) & 0x07) == 0)
@@ -1034,9 +1047,9 @@ bool performSingleRefCalibration(int8_t vhv_init_byte)
   return true;
 }
 
-int millis()
+uint16_t millis(void)
 {
-    return 0;
+    return millisecond_count;
 }
 //!void main() {
 //!   delay_ms(1000);

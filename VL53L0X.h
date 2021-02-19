@@ -163,7 +163,7 @@ extern "C" {
     uint8_t stop_variable; // read by init and used when starting measurement; is StopVariable field of VL53L0X_DevData_t structure in API
     uint32_t measurement_timing_budget_us;
 
-    bool getSpadInfo(int8_t * count, bool * type_is_aperture);
+    bool getSpadInfo(uint8_t * count, uint8_t * type_is_aperture);
 
     int8_t last_status; // status of last I2C transmission
 
@@ -173,7 +173,7 @@ extern "C" {
     uint8_t getAddress(void);
 
     bool init(bool io_2v8);
-    bool init2();
+    bool init2(void);
 
     void writeReg(uint8_t reg, uint8_t value);
     void writeReg16Bit(uint8_t reg, uint16_t value);
@@ -182,8 +182,7 @@ extern "C" {
     uint16_t readReg16Bit(uint8_t reg);
     uint32_t readReg32Bit(uint8_t reg);
 
-    void writeMulti(uint8_t reg, int8_t  * src, uint8_t count);
-    void readMulti(uint8_t reg, int8_t * dst, uint8_t count);
+    void readMulti(uint8_t reg, uint8_t * dst, uint8_t count);
 
     bool setSignalRateLimit(float limit_Mcps);
     float getSignalRateLimit(void);
@@ -211,7 +210,7 @@ extern "C" {
     uint16_t encodeTimeout(uint16_t timeout_mclks);
     uint32_t timeoutMclksToMicroseconds(uint16_t timeout_period_mclks, uint8_t vcsel_period_pclks);
     uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t vcsel_period_pclks);
-    int millis();
+    uint16_t millis(void);
 
 
 

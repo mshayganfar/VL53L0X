@@ -1,21 +1,26 @@
 /**
-  Generated Main Source File
+  Generated Interrupt Manager Source File
 
-  Company:
+  @Company:
     Microchip Technology Inc.
 
-  File Name:
-    main.c
+  @File Name:
+    interrupt_manager.c
 
-  Summary:
-    This is the main file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
+  @Summary:
+    This is the Interrupt Manager file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
 
-  Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
+  @Description:
+    This header file provides implementations for global interrupt handling.
+    For individual peripheral handlers please see the peripheral driver for
+    all modules selected in the GUI.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.81.7
         Device            :  PIC18F25Q10
-        Driver Version    :  2.00
+        Driver Version    :  2.04
+    The generated drivers are tested against the following:
+        Compiler          :  XC8 2.31 and above or later
+        MPLAB 	          :  MPLAB X 5.45
 */
 
 /*
@@ -41,40 +46,32 @@
     SOFTWARE.
 */
 
-#include "mcc_generated_files/mcc.h"
-#include "VL53L0X.h"
+#include "interrupt_manager.h"
+#include "mcc.h"
 
-
-uint16_t millisecond_count=0;
-
-/*
-                         Main application
- */
-void main(void)
+void  INTERRUPT_Initialize (void)
 {
-    // Initialize the device
-    SYSTEM_Initialize();
+    // Disable Interrupt Priority Vectors (16CXXX Compatibility Mode)
+    INTCONbits.IPEN = 0;
+}
 
-    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
-    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global and Peripheral Interrupts
-    // Use the following macros to:
-
-    // Enable the Global Interrupts
-    INTERRUPT_GlobalInterruptEnable();
-
-    // Disable the Global Interrupts
-    //INTERRUPT_GlobalInterruptDisable();
-
-    // Enable the Peripheral Interrupts
-    INTERRUPT_PeripheralInterruptEnable();
-
-    // Disable the Peripheral Interrupts
-    //INTERRUPT_PeripheralInterruptDisable();
-    init(1);
-
-    while (1)
+void __interrupt() INTERRUPT_InterruptManager (void)
+{
+    // interrupt handler
+    if(INTCONbits.PEIE == 1)
     {
-        // Add your application code
+        if(PIE4bits.TMR4IE == 1 && PIR4bits.TMR4IF == 1)
+        {
+            TMR4_ISR();
+        } 
+        else
+        {
+            //Unhandled Interrupt
+        }
+    }      
+    else
+    {
+        //Unhandled Interrupt
     }
 }
 /**
