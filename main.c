@@ -47,6 +47,7 @@
 
 uint16_t millisecond_count=0;
 char buffer[50]="This is a test";
+uint32_t sensor_range =0;
 
 /*
                          Main application
@@ -80,13 +81,30 @@ void main(void)
     sprintf(buffer,"Calling VL53L0X Init Function\r\n");
     printf("%s", buffer);
     RANGE1_EN_SetHigh();
-    init(1);
+    
+    //Setting Timeout
+    setTimeout(500);
+    if (!init(1))
+    {
+        sprintf(buffer,"Initialization Timeout");
+        printf("%s", buffer);
+        while (1) {}
+    }
 
     sprintf(buffer,"Driver VL53L0X Initialized\r\n");
     printf("%s", buffer);
+    
+    
+    
     while (1)
     {
-        // Add your application code
+        sensor_range=readRangeSingleMillimeters();
+        if (timeoutOccurred())
+        { 
+            sprintf(buffer,"Timeout occurred \r\n");
+            printf("%s", buffer);
+        }
+        __delay_ms(1000);
     }
 }
 /**
